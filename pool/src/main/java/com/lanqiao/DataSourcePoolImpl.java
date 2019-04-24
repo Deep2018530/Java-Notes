@@ -81,7 +81,7 @@ public class DataSourcePoolImpl extends PoolConstant implements  DataSourcePool{
     private void loadDriver() {
        String driverClass = PropertyPlaceHolder.getInstance().getProperty(DRIVER_CLASS);
        try{
-           Class.forName(driverClass);
+           //Class.forName(driverClass);
           /* 对于驱动，在系统的配置里遍历递归找有没有这个驱动，找到了就连接，没找到就报错
              为了不让它去默认递归遍历，非常耗时间，所以这里直接指定这个mysql的驱动，直接注册。不让它去进行默认的配置*/
            Driver driver = (Driver) this.getClass().getClassLoader().loadClass(driverClass).newInstance();
