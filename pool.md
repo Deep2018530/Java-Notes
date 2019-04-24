@@ -106,4 +106,13 @@
     }
 ```
 * 释放连接对象(并非关闭连接对象，而是把连接对象放回池子或者将连接对象的状态变为`可用、空闲`....等)
+``` JAVA
+    /**
+     * 释放连接
+     */
+    public void releaseConnection(){
+        System.out.println("连接被释放");
+        this.state = false;
+    }
+```
 
