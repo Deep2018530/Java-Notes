@@ -21,8 +21,89 @@
 
 ### 要点(![代码](https://github.com/Deep2018530/Java-Notes/tree/master/pool/src/main/java/com/lanqiao))
 * 初始化连接池
+``` JAVA
+    transient int initSize = DEFAULT_INIT_SIZE;
+    transient int stepSize = DEFAULT_STEP_SIZE;
+    transient int maxSize = DEFAULT_MAX_SIZE;
+    transient long timeout = DEFAULT_TIMEOUT;
+
+    public DataSourcePoolImpl(){
+        //加载驱动
+        loadDriver();
+        //初始化连接池
+        initPool();
+    }
+  /**
+     * 加载驱动(jdbc4.0)
+     */
+    private void loadDriver() {
+       String driverClass = PropertyPlaceHolder.getInstance().getProperty(DRIVER_CLASS);
+       try{
+           //Class.forName(driverClass);
+          /* 对于驱动，在系统的配置里遍历递归找有没有这个驱动，找到了就连接，没找到就报错
+             为了不让它去默认递归遍历，非常耗时间，所以这里直接指定这个mysql的驱动，直接注册。不让它去进行默认的配置*/
+           Driver driver = (Driver) this.getClass().getClassLoader().loadClass(driverClass).newInstance();
+           DriverManager.registerDriver(driver);
+       }catch (Exception e){
+           e.printStackTrace();
+       }
+
+    }
+
+    /**
+     *  初始化连接池
+     */
+    private void initPool() {
+        //获取用户用户连接池配置
+        String initSizeString = PropertyPlaceHolder.getInstance().getProperty(INIT_SIZE);
+        String stepSizeString = PropertyPlaceHolder.getInstance().getProperty(STEP_SIZE);
+        String maxSizeString = PropertyPlaceHolder.getInstance().getProperty(MAX_SIZE);
+        String timeoutString = PropertyPlaceHolder.getInstance().getProperty(TIMEOUT);
+
+        //处理最后的配置
+        initSize = initSizeString == null ? initSize : Integer.parseInt(initSizeString);
+        stepSize = stepSizeString == null ? stepSize : Integer.parseInt(stepSizeString);
+        maxSize = maxSizeString == null ? maxSize : Integer.parseInt(maxSizeString);
+        timeout = timeoutString == null ? timeout : Long.parseLong(timeoutString);
+
+        //初始化连接对象
+        try {
+            createConnections(initSize);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+}
+```
 * 获取连接对象
   * 判断状态
   * 判断是否可用(连接超时)
+``` JAVA
+    /**
+     * 获取连接池中可用连接对象
+     * @return
+     */
+    private PooledConnection getAvailableConnection() throws SQLException {
+        //遍历连接池所有的连接对象
+        for (PooledConnection pooledConnection : poolList) {
+            //如果连接对象空闲(可用)
+            if (!pooledConnection.isState()){
+                Connection connection = pooledConnection.getConnection();
+                //判断连接对象是否可用
+                if (!connection.isValid((int)timeout)){
+                    connection = DriverManager.getConnection(
+                            PropertyPlaceHolder.getInstance().getProperty(URL),
+                            PropertyPlaceHolder.getInstance().getProperty(USER),
+                            PropertyPlaceHolder.getInstance().getProperty(PASSWORD));
+                    pooledConnection.setConnection(connection);
+                }
+                pooledConnection.setState(true);
+                return pooledConnection;
+            }
+        }
+
+        return null;
+    }
+```
 * 释放连接对象(并非关闭连接对象，而是把连接对象放回池子或者将连接对象的状态变为`可用、空闲`....等)
 
