@@ -19,7 +19,7 @@
 * 最大连接数 `MAX_SIZE`
 * 超时时间  `TIMEOUT`
 
-### 要点
+### 要点(![代码](https://github.com/Deep2018530/Java-Notes/tree/master/pool/src/main/java/com/lanqiao))
 * 初始化连接池
 * 获取连接对象
   * 判断状态
